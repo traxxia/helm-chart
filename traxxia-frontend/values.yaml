@@ -1,0 +1,31 @@
+traxxiafrontend:
+  image:
+    repository: traxxia.azurecr.io/traxxia_frontend
+    tag: latest
+    pullPolicy: Always
+
+  aksconfig:
+    namespace: ns-traxxia
+    replicas: 1
+    nodePool:
+      label: userpool
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2G
+      requests:
+        cpu: "1"
+        memory: 2G
+
+  service:
+    type: LoadBalancer
+    # type: ClusterIP
+    ip: "132.196.113.72"
+    port: 80
+    
+  app:
+    name: traxxia-frontend
+    port: 8080
+
+  azure:
+    clientId: "dummy"

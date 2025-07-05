@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "traxxia.fullname" . }}-frontend-deployment
+  namespace: {{ .Values.traxxiafrontend.aksconfig.namespace }}
+spec:
+  replicas: {{ .Values.traxxiafrontend.aksconfig.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "traxxia.name" . }}-frontend-app
+  template:
+    metadata:
+      labels:
+        app: {{ include "traxxia.name" . }}-frontend-app
+    spec:
+      nodeSelector:
+        agentpool: {{ .Values.traxxiafrontend.aksconfig.nodePool.label }}
+      containers:
+        - name: frontend
+          image: "{{ .Values.traxxiafrontend.image.repository }}:{{ .Values.traxxiafrontend.image.tag }}"
+          imagePullPolicy: "{{ .Values.traxxiafrontend.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.traxxiafrontend.app.port }}

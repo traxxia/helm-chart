@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ include "nuclios.fullname" . }}-backend-ingress
+  namespace: {{ .Values.nucliosbackend.aksconfig.namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/cors-allow-origin: "https://gap.mathco.com, http://localhost:3001"
+    nginx.ingress.kubernetes.io/cors-allow-methods: "GET, PUT, POST, DELETE, PATCH, OPTIONS, HEAD"
+    nginx.ingress.kubernetes.io/cors-allow-headers: "Accept, Accept-Language, Content-Language, Content-Type, Accept-Encoding, Authorization, Cache-Control, Codx-App-Id, Nac_access_token, nac_access_token, x-nac-access, Referer, Cookie, userId, Password_token"
+    nginx.ingress.kubernetes.io/cors-allow-credentials: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  ingressClassName: nginx
+  rules:
+  - http:
+      paths:
+      - path: /api(/|$)(.*)
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: {{ include "nuclios.fullname" . }}-backend-service
+            port:
+              number: {{ .Values.nucliosbackend.service.port }}

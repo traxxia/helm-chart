@@ -1,0 +1,46 @@
+traxxiabackend:
+  image:
+    repository: traxxia.azurecr.io/traxxia_backend
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    type: LoadBalancer
+    # type: ClusterIP
+    ip: "172.169.16.14:81"
+    port: 81
+
+  app:
+    name: traxxia-backend
+    port: 5000
+
+  aksconfig:
+    nodePool:
+      label: userpool
+    namespace: ns-traxxia
+    replicas: 1
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2G
+      requests:
+        cpu: "1"
+        memory: 2G
+
+  # env:
+  #   MONGO_URI: "mongodb+srv://kavitha:Piquota1234@cluster0.yxi1t.mongodb.net/traxxia?retryWrites=true&w=majority&appName=Cluster0"
+  #   SECRET_KEY: "yO98as!@#3kLdsf^&2jklm@#Ploi34lMKm"
+  #   ENCRYPTION_KEY: "586c0217d62713ed562b2952c2d8ede13d110cd416bc2278b70c9b57e71e6b7e"
+
+  # azure:
+  #   keyVaultName: gapakvdemo
+  #   resourceGroup: rg-devops-poc
+  #   tenantId: 4bf30310-e4f1-4658-9e34-9e8a5a193ed1
+  #   clientId: fed33b30-b3fd-4c73-a145-a7e79a199749
+
+  # akssecretname: appsecret
+
+  # keyVault:
+  #   secrets:
+  #     - name: APPLICATIONINSIGHTSCONNECTIONSTRING
+  #       alias: APPLICATIONINSIGHTS_CONNECTION_STRING
