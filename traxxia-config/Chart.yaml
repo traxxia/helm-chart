@@ -1,0 +1,5 @@
+apiVersion: v2
+name: traxxia
+description: Helm chart for deploying traxxia to AKS
+version: 0.1.0
+appVersion: "1.0"

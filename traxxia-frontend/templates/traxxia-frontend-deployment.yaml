@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "traxxia.fullname" . }}-frontend-deployment
-  namespace: {{ .Values.traxxiafrontend.aksconfig.namespace }}
+  namespace: {{ .Values.frontend.deployment.namespace }}
 spec:
-  replicas: {{ .Values.traxxiafrontend.aksconfig.replicas }}
+  replicas: {{ .Values.frontend.deployment.replicas }}
   selector:
     matchLabels:
       app: {{ include "traxxia.name" . }}-frontend-app
@@ -14,10 +14,15 @@ spec:
         app: {{ include "traxxia.name" . }}-frontend-app
     spec:
       nodeSelector:
-        agentpool: {{ .Values.traxxiafrontend.aksconfig.nodePool.label }}
+        agentpool: {{ .Values.frontend.deployment.nodeSelectorLabel }}
       containers:
         - name: frontend
-          image: "{{ .Values.traxxiafrontend.image.repository }}:{{ .Values.traxxiafrontend.image.tag }}"
-          imagePullPolicy: "{{ .Values.traxxiafrontend.image.pullPolicy }}"
+          image: "{{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}"
+          imagePullPolicy: "{{ .Values.frontend.image.pullPolicy }}"
           ports:
-            - containerPort: {{ .Values.traxxiafrontend.app.port }}
+            - containerPort: {{ .Values.frontend.application.containerPort }}
+          env:
+            {{- range $key, $value := .Values.frontend.environment }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}

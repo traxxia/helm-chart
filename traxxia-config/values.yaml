@@ -1,0 +1,19 @@
+config:
+  deployment:
+    namespace: ns-trax-dev
+
+  tls:
+    hosts:
+      frontend: app.traxxia.ai
+      backend: api.traxxia.ai
+    secretName: traxxia-tls
+
+  service:
+    frontend: traxxia-frontend-service
+    backend: traxxia-backend-service
+    port:
+      frontend: 80
+      backend: 5000
+    
+  azure:
+    clientId: 59682913-7dc9-490b-bd03-d181863ee5b0

@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "traxxia.fullname" . }}-backend-deployment
-  namespace: {{ .Values.traxxiabackend.aksconfig.namespace }}
+  namespace: {{ .Values.backend.deployment.namespace }}
 spec:
-  replicas: {{ .Values.traxxiabackend.aksconfig.replicas }}
+  replicas: {{ .Values.backend.deployment.replicas }}
   selector:
     matchLabels:
       app: {{ include "traxxia.name" . }}-backend-app
@@ -13,12 +13,32 @@ spec:
       labels:
         app: {{ include "traxxia.name" . }}-backend-app
     spec:
-      # serviceAccountName: nuclios-backend-sa
+      serviceAccountName: {{ .Values.backend.aks.serviceAccount }}
       nodeSelector:
-        agentpool: {{ .Values.traxxiabackend.aksconfig.nodePool.label }}
+        agentpool: {{ .Values.backend.deployment.nodeSelectorLabel }}
       containers:
         - name: backend
-          image: "{{ .Values.traxxiabackend.image.repository }}:{{ .Values.traxxiabackend.image.tag }}"
-          imagePullPolicy: "{{ .Values.traxxiabackend.image.pullPolicy }}"
+          image: "{{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}"
+          imagePullPolicy: "{{ .Values.backend.image.pullPolicy }}"
           ports:
-            - containerPort: {{ .Values.traxxiabackend.app.port }}
+            - containerPort: {{ .Values.backend.application.containerPort }}
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          env:
+            {{- range .Values.backend.keyVault.secrets }}
+            - name: {{ .alias }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.backend.aks.secretName }}
+                  key: {{ .alias }}
+            {{- end }}
+
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "traxxia.fullname" . }}-backend-spc
