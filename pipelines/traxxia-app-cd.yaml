@@ -1,0 +1,38 @@
+trigger: none
+
+parameters:
+  - name: frontendTag
+    type: string
+    default: 'latest'
+
+  - name: backendTag
+    type: string
+    default: 'latest'
+
+variables:
+  - group: traxxia-aks-deployment-config-dev  # Variable group with AKS, ACR, namespaces, etc.
+
+stages:
+  - stage: DeployFrontend
+    displayName: 'Deploy Frontend'
+    jobs:
+      - template: template/helm-deploy-job-template.yaml
+        parameters:
+          imageName: 'trax_dev_frontend'
+          serviceName: 'traxfe'
+          chartPath: 'traxxia-frontend'
+          namespace: '$(NAMESPACE)'
+          imageTag: ${{ parameters.frontendTag }}
+          deploymentName: 'traxfe-traxxia-frontend-deployment'
+
+  - stage: DeployBackend
+    displayName: 'Deploy Backend'
+    jobs:
+      - template: template/helm-deploy-job-template.yaml
+        parameters:
+          imageName: 'trax_dev_backend'
+          serviceName: 'traxbe'
+          chartPath: 'traxxia-backend'
+          namespace: '$(NAMESPACE)'
+          imageTag: ${{ parameters.backendTag }}
+          deploymentName: 'traxbe-traxxia-backend-deployment'

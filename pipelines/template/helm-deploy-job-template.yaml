@@ -1,0 +1,85 @@
+parameters:
+  - name: serviceName
+    type: string
+
+  - name: imageName
+    type: string
+
+  - name: chartPath
+    type: string
+
+  - name: namespace
+    type: string
+
+  - name: imageTag
+    type: string
+
+  - name: deploymentName
+    type: string
+
+jobs:
+  - job: DeployHelmChart
+    displayName: 'Deploy ${{ parameters.serviceName }}'
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+      - task: Kubernetes@1
+        displayName: 'Set kubeconfig for AKS'
+        inputs:
+          connectionType: 'Azure Resource Manager'
+          azureSubscriptionEndpoint: '$(AZURE_SUBSCRIPTION)'
+          azureResourceGroup: '$(AKS_RESOURCE_GROUP)'
+          kubernetesCluster: '$(AKS_CLUSTER_NAME)'
+          namespace: '${{ parameters.namespace }}'
+
+      - task: HelmInstaller@1
+        displayName: 'Install Helm'
+        inputs:
+          helmVersionToInstall: 'latest'
+
+      - task: HelmDeploy@0
+        displayName: 'Helm Upgrade ${{ parameters.serviceName }}'
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceConnection: '$(K8S_SERVICE_CONNECTION_NAME)'
+          namespace: '${{ parameters.namespace }}'
+          command: upgrade
+          chartType: FilePath
+          chartPath: '${{ parameters.chartPath }}'
+          releaseName: '${{ parameters.serviceName }}'
+          install: true
+          valueFile: '${{ parameters.chartPath }}/values.yaml'
+          overrideValues: |
+            image.repository=$(ACR_NAME).azurecr.io/${{ parameters.imageName }}
+            image.tag=${{ parameters.imageTag }}
+            image.pullPolicy=Always
+          arguments: '--atomic --wait --force'
+
+      - task: Kubernetes@1
+        displayName: 'Restart Deployment'
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: '$(K8S_SERVICE_CONNECTION_NAME)'
+          namespace: '${{ parameters.namespace }}'
+          command: 'rollout'
+          arguments: 'restart deployment/${{ parameters.deploymentName }} -n ${{ parameters.namespace }}'
+          secretType: 'dockerRegistry'
+          containerRegistryType: 'Azure Container Registry'
+
+      - task: Kubernetes@1
+        displayName: 'Verify Deployment'
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceEndpoint: '$(K8S_SERVICE_CONNECTION_NAME)'
+          namespace: '${{ parameters.namespace }}'
+          command: 'rollout'
+          arguments: 'status deployment/${{ parameters.deploymentName }} -n ${{ parameters.namespace }} --timeout=120s'
+          
+      - task: HelmDeploy@0
+        displayName: 'List Helm Releases'
+        inputs:
+          connectionType: 'Kubernetes Service Connection'
+          kubernetesServiceConnection: '$(K8S_SERVICE_CONNECTION_NAME)'
+          namespace: '${{ parameters.namespace }}'
+          command: list
