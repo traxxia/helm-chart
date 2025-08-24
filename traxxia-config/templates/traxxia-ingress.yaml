@@ -15,6 +15,7 @@ spec:
   - hosts:
       - {{ .Values.config.tls.hosts.frontend }}
       - {{ .Values.config.tls.hosts.backend }}
+      - {{ .Values.config.tls.hosts.mlbackend }}
     secretName: {{ .Values.config.tls.secretName }}
   rules:
   - host: {{ .Values.config.tls.hosts.frontend }}
@@ -37,3 +38,13 @@ spec:
             name: {{ .Values.config.service.backend }}
             port:
               number: {{ .Values.config.service.port.backend }}
+  - host: {{ .Values.config.tls.hosts.mlbackend }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Values.config.service.mlbackend }}
+            port:
+              number: {{ .Values.config.service.port.mlbackend }}

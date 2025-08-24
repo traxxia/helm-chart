@@ -9,6 +9,10 @@ parameters:
     type: string
     default: 'latest'
 
+  - name: mlbackendTag
+    type: string
+    default: 'latest'
+
 variables:
   - group: traxxia-aks-deployment-config-dev  # Variable group with AKS, ACR, namespaces, etc.
 
@@ -36,3 +40,15 @@ stages:
           namespace: '$(NAMESPACE)'
           imageTag: ${{ parameters.backendTag }}
           deploymentName: 'traxbe-traxxia-backend-deployment'
+
+  - stage: DeployMLBackend
+    displayName: 'Deploy MLBackend'
+    jobs:
+      - template: template/helm-deploy-job-template.yaml
+        parameters:
+          imageName: 'trax_dev_ml_backend'
+          serviceName: 'traxmlbe'
+          chartPath: 'traxxia-ml-backend'
+          namespace: '$(NAMESPACE)'
+          imageTag: ${{ parameters.mlbackendTag }}
+          deploymentName: 'traxmlbe-traxxia-mlbackend-deployment'
