@@ -34,6 +34,10 @@ backend:
     secretName: backend-secret
     serviceAccount: traxxia-aks-sa
 
+  environment: 
+    AZURE_STORAGE_ACCOUNT: "traxdevasa"
+    REACT_APP_ML_BACKEND_URL: "traxxiacontainer"
+
   keyVault:
     secrets:
       - name: MONGO-URI
@@ -42,3 +46,5 @@ backend:
         alias: SECRET_KEY
       - name: ENCRYPTION-KEY
         alias: ENCRYPTION_KEY
+      - name: AZURE-STORAGE-KEY
+        alias: AZURE_STORAGE_KEY
