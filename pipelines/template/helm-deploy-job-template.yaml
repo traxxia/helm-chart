@@ -38,6 +38,21 @@ jobs:
         inputs:
           helmVersionToInstall: 'latest'
 
+      - script: |
+          echo "Checking for stuck Helm releases..."
+          status=$(helm status ${{ parameters.serviceName }} -n ${{ parameters.namespace }} || true)
+          if echo "$status" | grep -q "pending"; then
+            echo "Found stuck Helm release. Cleaning up..."
+            latest=$(kubectl get secrets -n ${{ parameters.namespace }} | grep "sh.helm.release.v1.${{ parameters.serviceName }}" | sort | tail -n 1 | awk '{print $1}')
+            if [ ! -z "$latest" ]; then
+              kubectl delete secret $latest -n ${{ parameters.namespace }}
+              echo "Deleted stuck secret: $latest"
+            fi
+          else
+            echo "No stuck release found."
+          fi
+        displayName: 'Clean up stuck Helm release if any'
+
       - task: HelmDeploy@0
         displayName: 'Helm Upgrade ${{ parameters.serviceName }}'
         inputs:
