@@ -27,6 +27,10 @@ spec:
               mountPath: "/mnt/secrets-store"
               readOnly: true
           env:
+            {{- range $key, $value := .Values.backend.environment }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
             {{- range .Values.backend.keyVault.secrets }}
             - name: {{ .alias }}
               valueFrom:
