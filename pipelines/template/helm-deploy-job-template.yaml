@@ -54,7 +54,8 @@ jobs:
             image.repository=$(ACR_NAME).azurecr.io/${{ parameters.imageName }}
             image.tag=${{ parameters.imageTag }}
             image.pullPolicy=Always
-          arguments: '--atomic --wait --force'
+          arguments: '--rollback-on-failure --wait --force-replace --timeout 10m'
+
 
       - task: Kubernetes@1
         displayName: 'Restart Deployment'
