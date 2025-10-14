@@ -40,3 +40,9 @@ mlbackend:
         alias: NEWSAPI_API_KEY
       - name: OPENAI-API-KEY
         alias: OPENAI_API_KEY
+      - name: ALPHA-VANT-API-KEY
+        alias: ALPHA_VANT_API_KEY
+      - name: GROQ-API-KEY
+        alias: GROQ_API_KEY
+      - name: PERPLEXITY-API-KEY
+        alias: PERPLEXITY_API_KEY
