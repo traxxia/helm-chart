@@ -10,6 +10,8 @@ spec:
       app: {{ include "traxxia.name" . }}-mlbackend-app
   template:
     metadata:
+      annotations:
+        secrets-store.csi.k8s.io/refresh: "true"
       labels:
         app: {{ include "traxxia.name" . }}-mlbackend-app
     spec:
