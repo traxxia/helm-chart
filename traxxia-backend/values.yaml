@@ -36,7 +36,7 @@ backend:
 
   environment: 
     AZURE_STORAGE_ACCOUNT: "traxdevasa"
-    REACT_APP_ML_BACKEND_URL: "traxxiacontainer"
+    AZURE_STORAGE_CONTAINER: "traxxiacontainer"
 
   keyVault:
     secrets:

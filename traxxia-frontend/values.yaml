@@ -23,7 +23,3 @@ frontend:
     
   application:
     containerPort: 8080
-
-  environment: 
-    REACT_APP_BACKEND_URL: "https://api.traxxia.ai"
-    REACT_APP_ML_BACKEND_URL: "https://mlbe.traxxia.ai"
