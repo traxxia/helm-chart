@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "traxxia.fullname" . }}-mastraai-deployment
+  namespace: {{ .Values.mastraai.deployment.namespace }}
+spec:
+  replicas: {{ .Values.mastraai.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "traxxia.name" . }}-mastraai-app
+  template:
+    metadata:
+      annotations:
+        secrets-store.csi.k8s.io/refresh: "true"
+      labels:
+        app: {{ include "traxxia.name" . }}-mastraai-app
+    spec:
+      serviceAccountName: {{ .Values.mastraai.aks.serviceAccount }}
+      nodeSelector:
+        agentpool: {{ .Values.mastraai.deployment.nodeSelectorLabel }}
+      containers:
+        - name: mastraai
+          image: "{{ .Values.mastraai.image.repository }}:{{ .Values.mastraai.image.tag }}"
+          imagePullPolicy: "{{ .Values.mastraai.image.pullPolicy }}"
+          ports:
+            - containerPort: {{ .Values.mastraai.application.containerPort }}
+          volumeMounts:
+            - name: secrets-store-inline
+              mountPath: "/mnt/secrets-store"
+              readOnly: true
+          env:
+            {{- range $key, $value := .Values.mastraai.environment }}
+            - name: {{ $key }}
+              value: "{{ $value }}"
+            {{- end }}
+            {{- range .Values.mastraai.keyVault.secrets }}
+            - name: {{ .alias }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.mastraai.aks.secretName }}
+                  key: {{ .alias }}
+            {{- end }}
+
+      volumes:
+        - name: secrets-store-inline
+          csi:
+            driver: secrets-store.csi.k8s.io
+            readOnly: true
+            volumeAttributes:
+              secretProviderClass: {{ include "traxxia.fullname" . }}-mastraai-spc

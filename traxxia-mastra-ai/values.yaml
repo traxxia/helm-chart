@@ -1,0 +1,48 @@
+mastraai:
+  image:
+    repository: traxdevacr.azurecr.io/traxxia_dev_ai_assistant
+    tag: latest
+    pullPolicy: Always
+
+  service:
+    name: traxxia-mastraai-service
+    type: ClusterIP
+    port: 4111
+
+  application:
+    containerPort: 4111
+
+  deployment:
+    nodeSelectorLabel: userpool
+    namespace: ns-trax-dev
+    replicas: 2
+    resources:
+      limits:
+        cpu: "1"
+        memory: 2G
+      requests:
+        cpu: "1"
+        memory: 2G
+
+  azure:
+    keyVaultName: trax-dev-akv
+    resourceGroup: trax-dev-core-rg
+    tenantId: 3e737f0d-eee3-42c1-8c0f-cfd3e6f7053a
+    clientId: 59682913-7dc9-490b-bd03-d181863ee5b0
+
+  aks:
+    secretName: mastraai-secret
+    serviceAccount: traxxia-aks-sa
+
+  environment: 
+    LLM_PROVIDER: "openai"
+    NODE_ENV: "production"
+
+  keyVault:
+    secrets:
+      - name: GROQ-API-KEY
+        alias: GROQ_API_KEY
+      - name: MONGO-URI
+        alias: MONGO_URI
+      - name: OPENAI-API-KEY
+        alias: OPENAI_API_KEY
