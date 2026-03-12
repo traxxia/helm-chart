@@ -54,3 +54,5 @@ mlbackend:
         alias: LANGFUSE_SECRET_KEY
       - name: LANGFUSE-PUBLIC-KEY
         alias: LANGFUSE_PUBLIC_KEY
+      - name: MONGO-URI
+        alias: MONGO_URI
