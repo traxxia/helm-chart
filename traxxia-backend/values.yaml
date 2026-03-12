@@ -48,3 +48,7 @@ backend:
         alias: ENCRYPTION_KEY
       - name: AZURE-STORAGE-KEY
         alias: AZURE_STORAGE_KEY
+      - name: STRIPE-PUBLISHABLE-KEY
+        alias: STRIPE_PUBLISHABLE_KEY
+      - name: STRIPE-SECRET-KEY
+        alias: STRIPE_SECRET_KEY
