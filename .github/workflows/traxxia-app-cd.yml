@@ -1,0 +1,171 @@
+name: Traxxia App CD
+
+# ──────────────────────────────────────────────────────────────
+# GitHub Actions equivalent of:
+#   pipelines/traxxia-app-cd.yaml  (Azure DevOps)
+#
+# Trigger: manual (workflow_dispatch) — same as trigger: none in ADO.
+#
+# Each job calls the reusable helm-deploy.yml workflow.
+# Jobs run sequentially (needs:) matching the original ADO stage order:
+#   Frontend → Backend → ML Backend → AI Assistant
+#
+# Image names must match exactly what each CI pipeline pushes to ACR:
+#   Frontend CI  → traxxia_frontend    (tag: latest | 1.0.<run_number>)
+#   Backend CI   → traxxia_backend     (tag: latest | 1.0.<run_number>)
+#   ML Backend CI→ ml-backend          (tag: latest | sha-<short_sha> | develop)
+#   AI Asst. CI  → traxxia-ai-assistant(tag: latest | <full_sha>)
+# ──────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      # ── Frontend ───────────────────────────────────────────────────
+      # CI pushes: traxxia_frontend:latest  and  traxxia_frontend:1.0.<run_number>
+      deployFrontend:
+        description: 'Deploy Frontend?'
+        type: boolean
+        required: true
+        default: true
+      frontendTag:
+        description: 'Frontend image tag  (e.g. latest | 1.0.42)'
+        required: false
+        default: 'latest'
+
+      # ── Backend ────────────────────────────────────────────────────
+      # CI pushes: traxxia_backend:latest  and  traxxia_backend:1.0.<run_number>
+      deployBackend:
+        description: 'Deploy Backend?'
+        type: boolean
+        required: true
+        default: true
+      backendTag:
+        description: 'Backend image tag  (e.g. latest | 1.0.42)'
+        required: false
+        default: 'latest'
+
+      # ── ML Backend ─────────────────────────────────────────────────
+      # CI pushes: ml-backend:latest | ml-backend:develop | ml-backend:sha-<short_sha>
+      deployMLBackend:
+        description: 'Deploy ML Backend?'
+        type: boolean
+        required: true
+        default: true
+      mlbackendTag:
+        description: 'ML Backend image tag  (e.g. latest | develop | sha-abc1234)'
+        required: false
+        default: 'latest'
+
+      # ── AI Assistant ───────────────────────────────────────────────
+      # CI pushes: traxxia-ai-assistant:latest  and  traxxia-ai-assistant:<full_sha>
+      deployMastraAI:
+        description: 'Deploy AI Assistant?'
+        type: boolean
+        required: true
+        default: true
+      mastraaiTag:
+        description: 'AI Assistant image tag  (e.g. latest | <full commit SHA>)'
+        required: false
+        default: 'latest'
+
+# ── Required secrets (set in repo / environment settings) ─────────────
+# AZURE_CREDENTIALS   – Service principal JSON  (az ad sp create-for-rbac --sdk-auth)
+# ACR_LOGIN_SERVER    – e.g. myregistry.azurecr.io
+# AKS_RESOURCE_GROUP  – Resource group containing the AKS cluster
+# AKS_CLUSTER_NAME    – AKS cluster name
+# NAMESPACE           – Kubernetes namespace to deploy into
+# ──────────────────────────────────────────────────────────────────────
+
+jobs:
+  # ────────────────────────────────────────────────────────────────────
+  # Stage 1 — Frontend
+  # ADO: stages[DeployFrontend]
+  # CI image: traxxia_frontend   Tag strategy: latest | 1.0.<run_number>
+  # ────────────────────────────────────────────────────────────────────
+  deploy-frontend:
+    name: Deploy Frontend
+    if: ${{ inputs.deployFrontend }}
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      imageName: traxxia_frontend
+      serviceName: traxfe
+      chartPath: traxxia-frontend
+      imageTag: ${{ inputs.frontendTag }}
+      deploymentName: traxfe-traxxia-frontend-deployment
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+      AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+      AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+      NAMESPACE: ${{ secrets.NAMESPACE }}
+
+  # ────────────────────────────────────────────────────────────────────
+  # Stage 2 — Backend
+  # ADO: stages[DeployBackend]
+  # CI image: traxxia_backend   Tag strategy: latest | 1.0.<run_number>
+  # ────────────────────────────────────────────────────────────────────
+  deploy-backend:
+    name: Deploy Backend
+    if: ${{ inputs.deployBackend }}
+    # Remove 'needs: deploy-frontend' so it can run independently if frontend is skipped
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      imageName: traxxia_backend
+      serviceName: traxbe
+      chartPath: traxxia-backend
+      imageTag: ${{ inputs.backendTag }}
+      deploymentName: traxbe-traxxia-backend-deployment
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+      AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+      AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+      NAMESPACE: ${{ secrets.NAMESPACE }}
+
+  # ────────────────────────────────────────────────────────────────────
+  # Stage 3 — ML Backend
+  # ADO: stages[DeployMLBackend]
+  # CI image: ml-backend   Tag strategy: latest | develop | sha-<short_sha>
+  # NOTE: image name changed from trax_dev_ml_backend → ml-backend (matches CI)
+  # ────────────────────────────────────────────────────────────────────
+  deploy-mlbackend:
+    name: Deploy ML Backend
+    if: ${{ inputs.deployMLBackend }}
+    # Remove 'needs: deploy-backend' so it can run independently
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      imageName: ml-backend
+      serviceName: traxmlbe
+      chartPath: traxxia-ml-backend
+      imageTag: ${{ inputs.mlbackendTag }}
+      deploymentName: traxmlbe-traxxia-mlbackend-deployment
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+      AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+      AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+      NAMESPACE: ${{ secrets.NAMESPACE }}
+
+  # ────────────────────────────────────────────────────────────────────
+  # Stage 4 — AI Assistant (Mastra AI)
+  # ADO: stages[DeployMastraAI]
+  # CI image: traxxia-ai-assistant   Tag strategy: latest | <full_sha>
+  # NOTE: image name changed from traxxia_dev_ai_assistant → traxxia-ai-assistant (matches CI)
+  # ────────────────────────────────────────────────────────────────────
+  deploy-mastraai:
+    name: Deploy AI Assistant
+    if: ${{ inputs.deployMastraAI }}
+    # Remove 'needs: deploy-mlbackend' so it can run independently
+    uses: ./.github/workflows/helm-deploy.yml
+    with:
+      imageName: traxxia-ai-assistant
+      serviceName: traxmastraai
+      chartPath: traxxia-mastra-ai
+      imageTag: ${{ inputs.mastraaiTag }}
+      deploymentName: traxmastraai-traxxia-mastraai-deployment
+    secrets:
+      AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      ACR_LOGIN_SERVER: ${{ secrets.ACR_LOGIN_SERVER }}
+      AKS_RESOURCE_GROUP: ${{ secrets.AKS_RESOURCE_GROUP }}
+      AKS_CLUSTER_NAME: ${{ secrets.AKS_CLUSTER_NAME }}
+      NAMESPACE: ${{ secrets.NAMESPACE }}

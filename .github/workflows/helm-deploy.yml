@@ -1,0 +1,127 @@
+name: Helm Deploy (Reusable)
+
+# ──────────────────────────────────────────────────────────────
+# Reusable workflow — equivalent to:
+#   pipelines/template/helm-deploy-job-template.yaml  (Azure DevOps)
+#
+# Called by traxxia-app-cd.yml for each service.
+# ──────────────────────────────────────────────────────────────
+
+on:
+  workflow_call:
+    inputs:
+      # Image stored in ACR  (e.g. trax_dev_frontend)
+      imageName:
+        required: true
+        type: string
+
+      # Helm release / service name  (e.g. traxfe)
+      serviceName:
+        required: true
+        type: string
+
+      # Path to the Helm chart inside this repo  (e.g. traxxia-frontend)
+      chartPath:
+        required: true
+        type: string
+
+      # Tag produced by the CI pipeline  (e.g. latest, 1.0.42, sha-abc1234)
+      imageTag:
+        required: true
+        type: string
+
+      # Kubernetes deployment name for rollout restart / status check
+      deploymentName:
+        required: true
+        type: string
+
+    secrets:
+      AZURE_CREDENTIALS:
+        required: true
+      ACR_LOGIN_SERVER:     # e.g. myregistry.azurecr.io
+        required: true
+      AKS_RESOURCE_GROUP:
+        required: true
+      AKS_CLUSTER_NAME:
+        required: true
+      NAMESPACE:
+        required: true
+
+jobs:
+  deploy:
+    name: Deploy ${{ inputs.serviceName }}
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout (needed for local Helm charts) ─────────────────
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      # ── 2. Authenticate to Azure ───────────────────────────────────
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      # ── 3. Point kubectl at the AKS cluster ───────────────────────
+      - name: Set AKS kubeconfig
+        uses: azure/aks-set-context@v4
+        with:
+          resource-group: ${{ secrets.AKS_RESOURCE_GROUP }}
+          cluster-name: ${{ secrets.AKS_CLUSTER_NAME }}
+
+      # ── 4. Install Helm ────────────────────────────────────────────
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: latest
+
+      # ── 5. Clean up any stuck / pending Helm release ───────────────
+      - name: Clean up stuck Helm release (if any)
+        run: |
+          echo "Checking for stuck Helm releases..."
+          status=$(helm status ${{ inputs.serviceName }} -n ${{ secrets.NAMESPACE }} 2>/dev/null || true)
+          if echo "$status" | grep -q "pending"; then
+            echo "Found stuck Helm release. Cleaning up..."
+            latest=$(kubectl get secrets -n ${{ secrets.NAMESPACE }} \
+              | grep "sh.helm.release.v1.${{ inputs.serviceName }}" \
+              | sort | tail -n 1 | awk '{print $1}')
+            if [ -n "$latest" ]; then
+              kubectl delete secret "$latest" -n ${{ secrets.NAMESPACE }}
+              echo "Deleted stuck secret: $latest"
+            fi
+          else
+            echo "No stuck release found."
+          fi
+
+      # ── 6. Helm upgrade --install ──────────────────────────────────
+      - name: Helm Upgrade / Install ${{ inputs.serviceName }}
+        run: |
+          helm upgrade --install ${{ inputs.serviceName }} ./${{ inputs.chartPath }} \
+            --namespace ${{ secrets.NAMESPACE }} \
+            --values ./${{ inputs.chartPath }}/values.yaml \
+            --set image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ inputs.imageName }} \
+            --set image.tag=${{ inputs.imageTag }} \
+            --set image.pullPolicy=Always \
+            --rollback-on-failure \
+            --wait \
+            --force-replace \
+            --timeout 10m
+
+      # ── 7. Force pod refresh ───────────────────────────────────────
+      - name: Restart Deployment
+        run: |
+          kubectl rollout restart deployment/${{ inputs.deploymentName }} \
+            -n ${{ secrets.NAMESPACE }}
+
+      # ── 8. Wait for rollout to finish ─────────────────────────────
+      - name: Verify Deployment
+        run: |
+          kubectl rollout status deployment/${{ inputs.deploymentName }} \
+            -n ${{ secrets.NAMESPACE }} --timeout=120s
+
+      # ── 9. Audit log ──────────────────────────────────────────────
+      - name: List Helm Releases
+        run: helm list -n ${{ secrets.NAMESPACE }}
