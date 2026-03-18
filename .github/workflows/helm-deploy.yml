@@ -88,13 +88,13 @@ jobs:
         run: |
           echo "Checking for stuck Helm releases..."
           status=$(helm status ${{ inputs.serviceName }} -n ${{ secrets.NAMESPACE }} 2>/dev/null || true)
-          if echo "$status" | grep -q "pending"; then
+          if echo "$status" | grep -iq "pending"; then
             echo "Found stuck Helm release. Cleaning up..."
-            latest=$(kubectl get secrets -n ${{ secrets.NAMESPACE }} \
-              | grep "sh.helm.release.v1.${{ inputs.serviceName }}" \
-              | sort | tail -n 1 | awk '{print $1}')
+            latest=$(kubectl get secrets -n ${{ secrets.NAMESPACE }} -o name \
+              | grep "sh\.helm\.release\.v1\.${{ inputs.serviceName }}\.v" \
+              | sort -V | tail -n 1)
             if [ -n "$latest" ]; then
-              kubectl delete secret "$latest" -n ${{ secrets.NAMESPACE }}
+              kubectl delete "$latest" -n ${{ secrets.NAMESPACE }}
               echo "Deleted stuck secret: $latest"
             fi
           else
