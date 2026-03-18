@@ -50,7 +50,7 @@ mlbackend:
         alias: GROQ_API_KEY
       - name: PERPLEXITY-API-KEY
         alias: PERPLEXITY_API_KEY
-      - name: LANGFUSE-SECRET-KEY 
+      - name: LANGFUSE-SECRET-KEY
         alias: LANGFUSE_SECRET_KEY
       - name: LANGFUSE-PUBLIC-KEY
         alias: LANGFUSE_PUBLIC_KEY
