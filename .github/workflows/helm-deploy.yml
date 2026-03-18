@@ -25,6 +25,11 @@ on:
         required: true
         type: string
 
+      # Prefix used in values.yaml (e.g. frontend, backend)
+      valuesPrefix:
+        required: true
+        type: string
+
       # Tag produced by the CI pipeline  (e.g. latest, 1.0.42, sha-abc1234)
       imageTag:
         required: true
@@ -102,9 +107,9 @@ jobs:
           helm upgrade --install ${{ inputs.serviceName }} ./${{ inputs.chartPath }} \
             --namespace ${{ secrets.NAMESPACE }} \
             --values ./${{ inputs.chartPath }}/values.yaml \
-            --set image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ inputs.imageName }} \
-            --set image.tag=${{ inputs.imageTag }} \
-            --set image.pullPolicy=Always \
+            --set ${{ inputs.valuesPrefix }}.image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ inputs.imageName }} \
+            --set ${{ inputs.valuesPrefix }}.image.tag=${{ inputs.imageTag }} \
+            --set ${{ inputs.valuesPrefix }}.image.pullPolicy=Always \
             --rollback-on-failure \
             --wait \
             --timeout 10m

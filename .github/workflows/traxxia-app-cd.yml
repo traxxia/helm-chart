@@ -90,6 +90,7 @@ jobs:
       imageName: traxxia_prod_frontend
       serviceName: traxfe
       chartPath: traxxia-frontend
+      valuesPrefix: frontend
       imageTag: ${{ inputs.frontendTag }}
       deploymentName: traxfe-traxxia-frontend-deployment
     secrets:
@@ -113,6 +114,7 @@ jobs:
       imageName: traxxia_backend
       serviceName: traxbe
       chartPath: traxxia-backend
+      valuesPrefix: backend
       imageTag: ${{ inputs.backendTag }}
       deploymentName: traxbe-traxxia-backend-deployment
     secrets:
@@ -137,6 +139,7 @@ jobs:
       imageName: ml-backend
       serviceName: traxmlbe
       chartPath: traxxia-ml-backend
+      valuesPrefix: mlbackend
       imageTag: ${{ inputs.mlbackendTag }}
       deploymentName: traxmlbe-traxxia-mlbackend-deployment
     secrets:
@@ -161,6 +164,7 @@ jobs:
       imageName: traxxia-ai-assistant
       serviceName: traxmastraai
       chartPath: traxxia-mastra-ai
+      valuesPrefix: mastraai
       imageTag: ${{ inputs.mastraaiTag }}
       deploymentName: traxmastraai-traxxia-mastraai-deployment
     secrets:
