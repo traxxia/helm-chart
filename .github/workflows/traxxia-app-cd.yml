@@ -54,7 +54,7 @@ on:
       mlbackendTag:
         description: 'ML Backend image tag  (e.g. latest | develop | sha-abc1234)'
         required: false
-        default: 'latest'
+        default: 'develop'
 
       # ── AI Assistant ───────────────────────────────────────────────
       # CI pushes: traxxia-ai-assistant:latest  and  traxxia-ai-assistant:<full_sha>
