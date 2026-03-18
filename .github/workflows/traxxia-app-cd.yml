@@ -11,7 +11,7 @@ name: Traxxia App CD
 #   Frontend → Backend → ML Backend → AI Assistant
 #
 # Image names must match exactly what each CI pipeline pushes to ACR:
-#   Frontend CI  → traxxia_frontend    (tag: latest | 1.0.<run_number>)
+#   Frontend CI  → traxxia_prod_frontend    (tag: latest | 1.0.<run_number>)
 #   Backend CI   → traxxia_backend     (tag: latest | 1.0.<run_number>)
 #   ML Backend CI→ ml-backend          (tag: latest | sha-<short_sha> | develop)
 #   AI Asst. CI  → traxxia-ai-assistant(tag: latest | <full_sha>)
@@ -21,7 +21,7 @@ on:
   workflow_dispatch:
     inputs:
       # ── Frontend ───────────────────────────────────────────────────
-      # CI pushes: traxxia_frontend:latest  and  traxxia_frontend:1.0.<run_number>
+      # CI pushes: traxxia_prod_frontend:latest  and  traxxia_prod_frontend:1.0.<run_number>
       deployFrontend:
         description: 'Deploy Frontend?'
         type: boolean
@@ -80,14 +80,14 @@ jobs:
   # ────────────────────────────────────────────────────────────────────
   # Stage 1 — Frontend
   # ADO: stages[DeployFrontend]
-  # CI image: traxxia_frontend   Tag strategy: latest | 1.0.<run_number>
+  # CI image: traxxia_prod_frontend   Tag strategy: latest | 1.0.<run_number>
   # ────────────────────────────────────────────────────────────────────
   deploy-frontend:
     name: Deploy Frontend
     if: ${{ inputs.deployFrontend }}
     uses: ./.github/workflows/helm-deploy.yml
     with:
-      imageName: traxxia_frontend
+      imageName: traxxia_prod_frontend
       serviceName: traxfe
       chartPath: traxxia-frontend
       imageTag: ${{ inputs.frontendTag }}
