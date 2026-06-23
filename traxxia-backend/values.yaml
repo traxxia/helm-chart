@@ -51,11 +51,7 @@ backend:
       - name: STRIPE-PUBLISHABLE-KEY
         alias: STRIPE_PUBLISHABLE_KEY
       - name: STRIPE-SECRET-KEY
-        alias: STRIPE_SECRET_KEY
-      - name: AZURE-STORAGE-ACCOUNT
-        alias: AZURE_STORAGE_ACCOUNT
-      - name: AZURE-STORAGE-CONTAINER
-        alias: AZURE_STORAGE_CONTAINER
+        alias: STRIPE_SECRET_KEY 
       - name: ENCRYPTION-KEY
         alias: ENCRYPTION_KEY
       - name: OBSERVATORY-PASSWORD
