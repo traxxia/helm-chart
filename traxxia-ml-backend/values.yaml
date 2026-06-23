@@ -56,3 +56,7 @@ mlbackend:
         alias: LANGFUSE_PUBLIC_KEY
       - name: MONGO-URI
         alias: MONGO_URI
+      - name: GEMINI-API-KEY
+        alias: GEMINI_API_KEY
+      - name: ANTHROPIC-API-KEY
+        alias: ANTHROPIC_API_KEY

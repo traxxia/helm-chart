@@ -52,3 +52,27 @@ backend:
         alias: STRIPE_PUBLISHABLE_KEY
       - name: STRIPE-SECRET-KEY
         alias: STRIPE_SECRET_KEY
+      - name: AZURE-STORAGE-ACCOUNT
+        alias: AZURE_STORAGE_ACCOUNT
+      - name: AZURE-STORAGE-CONTAINER
+        alias: AZURE_STORAGE_CONTAINER
+      - name: ENCRYPTION-KEY
+        alias: ENCRYPTION_KEY
+      - name: OBSERVATORY-PASSWORD
+        alias: OBSERVATORY_PASSWORD
+      - name: MS-TENANT-ID
+        alias: MS_TENANT_ID
+      - name: MS-CLIENT-ID
+        alias: MS_CLIENT_ID
+      - name: MS-CLIENT-SECRET
+        alias: MS_CLIENT_SECRET
+      - name: MS-SENDER
+        alias: MS_SENDER
+      - name: FRONTEND-URL
+        alias: FRONTEND_URL
+      - name: MAX-FILE-UPLOAD-LIMIT
+        alias: MAX_FILE_UPLOAD_LIMIT
+      - name: MAX-FILE-SIZE-MB
+        alias: MAX_FILE_SIZE_MB
+      - name: NO-PLAN-BUSINESS-LIMIT
+        alias: NO_PLAN_BUSINESS_LIMIT 
