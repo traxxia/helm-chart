@@ -52,8 +52,7 @@ backend:
         alias: STRIPE_PUBLISHABLE_KEY
       - name: STRIPE-SECRET-KEY
         alias: STRIPE_SECRET_KEY 
-      - name: ENCRYPTION-KEY
-        alias: ENCRYPTION_KEY
+
       - name: OBSERVATORY-PASSWORD
         alias: OBSERVATORY_PASSWORD
       - name: MS-TENANT-ID

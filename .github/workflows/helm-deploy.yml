@@ -111,8 +111,22 @@ jobs:
             --set ${{ inputs.valuesPrefix }}.image.tag=${{ inputs.imageTag }} \
             --set ${{ inputs.valuesPrefix }}.image.pullPolicy=Always \
             --rollback-on-failure \
+            --force \
             --wait \
             --timeout 10m
+
+      # ── Debugging step if Helm upgrade fails ──────────────────────
+      - name: Debug Deployment on Failure
+        if: failure()
+        run: |
+          echo "==== DEPLOYMENT EVENTS ===="
+          kubectl describe deployment/${{ inputs.deploymentName }} -n ${{ secrets.NAMESPACE }} || true
+          
+          echo "==== FAILING PODS ===="
+          kubectl get pods -n ${{ secrets.NAMESPACE }} | grep -v 'Running' || true
+          
+          echo "==== RECENT CLUSTER EVENTS ===="
+          kubectl get events -n ${{ secrets.NAMESPACE }} --sort-by='.lastTimestamp' | tail -n 20 || true
 
       # ── 7. Force pod refresh ───────────────────────────────────────
       - name: Restart Deployment

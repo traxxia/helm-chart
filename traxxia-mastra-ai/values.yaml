@@ -45,6 +45,4 @@ mastraai:
       - name: MONGO-URI
         alias: MONGO_URI
       - name: OPENAI-API-KEY
-        alias: OPENAI_API_KEY
-      - name: LLM-PROVIDER
-        alias: LLM_PROVIDER
+        alias: OPENAI_API_KEY
