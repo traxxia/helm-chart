@@ -111,9 +111,19 @@ jobs:
             --set ${{ inputs.valuesPrefix }}.image.tag=${{ inputs.imageTag }} \
             --set ${{ inputs.valuesPrefix }}.image.pullPolicy=Always \
             --rollback-on-failure \
-            --force \
             --wait \
-            --timeout 10m
+            --timeout 10m || (
+              echo "Standard upgrade failed (likely due to corrupted patch state). Deleting old deployment and retrying..."
+              kubectl delete deployment/${{ inputs.deploymentName }} -n ${{ secrets.NAMESPACE }} --ignore-not-found
+              helm upgrade --install ${{ inputs.serviceName }} ./${{ inputs.chartPath }} \
+                --namespace ${{ secrets.NAMESPACE }} \
+                --values ./${{ inputs.chartPath }}/values.yaml \
+                --set ${{ inputs.valuesPrefix }}.image.repository=${{ secrets.ACR_LOGIN_SERVER }}/${{ inputs.imageName }} \
+                --set ${{ inputs.valuesPrefix }}.image.tag=${{ inputs.imageTag }} \
+                --set ${{ inputs.valuesPrefix }}.image.pullPolicy=Always \
+                --wait \
+                --timeout 10m
+            )
 
       # ── Debugging step if Helm upgrade fails ──────────────────────
       - name: Debug Deployment on Failure
